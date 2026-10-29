@@ -1,0 +1,418 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>AI Shop Makeover</title>
+<meta name="description" content="A 5-minute game for small businesses: check your AI readiness, dodge AI traps and find the right tool.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bowlby+One+SC&family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: one narrow phone-first column; a shop floor plan that fills in as you play, ending on a till receipt. */
+:root{
+  --bg:#F3F6F8; --paper:#FFFFFF; --ink:#14233A; --muted:#566476; --line:#D5DDE5;
+  --tag:#FFC23D; --tag-ink:#3A2600; --go:#1F8A5B; --go-bg:#DDF2E7; --mid:#B7791F; --mid-bg:#FBEBCF;
+  --stop:#C2412D; --stop-bg:#F8DDD7; --blank:#E7ECF1;
+  --display:"Bowlby One SC","Arial Black",Impact,sans-serif;
+  --body:"Figtree",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0E1622; --paper:#17212F; --ink:#E8EEF5; --muted:#9AA8B8; --line:#2A3748;
+  --tag:#FFC23D; --tag-ink:#2A1C00; --go:#4CC58C; --go-bg:#173A2B; --mid:#E5A84A; --mid-bg:#3A2D14;
+  --stop:#F07862; --stop-bg:#3D1E19; --blank:#223043; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0E1622; --paper:#17212F; --ink:#E8EEF5; --muted:#9AA8B8; --line:#2A3748;
+  --tag:#FFC23D; --tag-ink:#2A1C00; --go:#4CC58C; --go-bg:#173A2B; --mid:#E5A84A; --mid-bg:#3A2D14;
+  --stop:#F07862; --stop-bg:#3D1E19; --blank:#223043; color-scheme:dark}
+*{box-sizing:border-box}
+:root{color-scheme:light}
+[hidden]{display:none!important}
+img{max-width:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 40px}
+.wrap{max-width:560px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+h1,h2{font-family:var(--display);font-weight:400;line-height:1.05;margin:0;text-wrap:balance;letter-spacing:.01em}
+h1{font-size:clamp(2.1rem,9vw,3rem)} h2{font-size:1.55rem}
+p{margin:0}
+.label{font-family:var(--mono);font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.coins{font-family:var(--mono);font-size:.85rem;background:var(--tag);color:var(--tag-ink);padding:4px 10px;border-radius:3px;font-weight:600;font-variant-numeric:tabular-nums}
+.tag{display:inline-block;background:var(--tag);color:var(--tag-ink);font-family:var(--mono);font-weight:600;font-size:.78rem;
+  padding:5px 12px 5px 18px;clip-path:polygon(10px 0,100% 0,100% 100%,10px 100%,0 50%);letter-spacing:.04em}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:20px;display:flex;flex-direction:column;gap:14px}
+.lead{color:var(--muted);font-size:1.02rem}
+.opts{display:flex;flex-direction:column;gap:10px}
+.opt{font:inherit;text-align:left;background:var(--paper);color:var(--ink);border:1.5px solid var(--line);border-radius:8px;
+  padding:14px 16px;cursor:pointer;display:flex;gap:12px;align-items:flex-start;transition:border-color .15s,transform .1s}
+.opt:hover{border-color:var(--ink)} .opt:active{transform:scale(.99)}
+.opt:focus-visible,.btn:focus-visible,.chip:focus-visible,textarea:focus-visible{outline:3px solid var(--tag);outline-offset:2px}
+.opt .k{font-family:var(--mono);font-weight:600;font-size:.8rem;color:var(--muted);min-width:1.2em;padding-top:2px}
+.opt[disabled]{cursor:default;opacity:.55} .opt.right{opacity:1;border-color:var(--go);background:var(--go-bg)}
+.opt.wrong{opacity:1;border-color:var(--stop);background:var(--stop-bg)}
+.btn{font:inherit;font-weight:700;background:var(--ink);color:var(--bg);border:0;border-radius:8px;padding:14px 20px;cursor:pointer;align-self:flex-start}
+.btn.ghost{background:transparent;color:var(--ink);border:1.5px solid var(--line)}
+.btn[disabled]{opacity:.5;cursor:default}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.reveal{border-left:4px solid var(--tag);padding:4px 0 4px 14px;display:flex;flex-direction:column;gap:6px}
+.reveal b{font-size:1.05rem}
+.takeaway{font-family:var(--mono);font-size:.85rem;color:var(--muted)}
+/* floor plan */
+.plan{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;background:var(--ink);padding:4px;border-radius:6px}
+.room{background:var(--blank);color:var(--muted);padding:10px 8px;min-height:68px;display:flex;flex-direction:column;justify-content:space-between;gap:4px;border-radius:2px;transition:background .4s}
+.room .code{font-family:var(--mono);font-size:.68rem;letter-spacing:.08em}
+.room .nm{font-weight:700;font-size:.82rem;line-height:1.2;color:var(--ink)}
+.room.go{background:var(--go-bg)} .room.go .code{color:var(--go)}
+.room.mid{background:var(--mid-bg)} .room.mid .code{color:var(--mid)}
+.room.stop{background:var(--stop-bg)} .room.stop .code{color:var(--stop)}
+.room.now{outline:3px solid var(--tag);outline-offset:-3px}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:var(--muted)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+.progress{height:6px;background:var(--blank);border-radius:3px;overflow:hidden}
+.progress span{display:block;height:100%;background:var(--tag);transition:width .3s}
+.bubble{background:var(--blank);border-radius:12px 12px 12px 2px;padding:12px 14px;font-size:.98rem}
+.bubble .who{font-family:var(--mono);font-size:.7rem;color:var(--muted);display:block;margin-bottom:4px;letter-spacing:.06em}
+/* receipt */
+.receipt{background:var(--paper);font-family:var(--mono);font-size:.86rem;padding:22px 18px 26px;border:1px solid var(--line);
+  -webkit-mask:radial-gradient(circle 6px at 50% 100%,transparent 98%,#000) 0 0/16px 100%;mask:radial-gradient(circle 6px at 50% 100%,transparent 98%,#000) 0 0/16px 100%;
+  display:flex;flex-direction:column;gap:6px;font-variant-numeric:tabular-nums}
+.receipt .c{text-align:center} .receipt hr{border:0;border-top:1px dashed var(--muted);margin:8px 0;width:100%}
+.receipt .ln{display:flex;justify-content:space-between;gap:10px}
+.receipt .big{font-size:1.1rem;font-weight:600}
+.stamp{font-family:var(--display);font-size:1.4rem;text-align:center;padding:8px;border:3px solid currentColor;transform:rotate(-2deg);margin:8px auto;display:inline-block}
+.moves{display:flex;flex-direction:column;gap:12px;margin:0;padding:0;list-style:none}
+.moves li{display:flex;gap:12px;align-items:flex-start}
+.moves .n{font-family:var(--mono);font-weight:600;background:var(--tag);color:var(--tag-ink);border-radius:50%;width:26px;height:26px;display:grid;place-items:center;flex:none;font-size:.82rem}
+textarea{width:100%;font:inherit;font-size:1rem;color:var(--ink);background:var(--bg);border:1.5px solid var(--line);border-radius:8px;padding:12px;min-height:96px;resize:vertical}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{font:inherit;font-size:.85rem;background:var(--blank);color:var(--ink);border:0;border-radius:20px;padding:7px 12px;cursor:pointer}
+.tool{border:1px solid var(--line);border-radius:8px;padding:14px;display:flex;flex-direction:column;gap:6px}
+.tool .head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+.tool .name{font-weight:700;font-size:1.05rem}
+.pill{font-family:var(--mono);font-size:.68rem;padding:2px 8px;border-radius:10px;background:var(--mid-bg);color:var(--mid);letter-spacing:.05em;text-transform:uppercase}
+.warn{font-size:.85rem;color:var(--muted)}
+.small{font-size:.85rem;color:var(--muted)}
+.fade{animation:in .35s ease both}
+@keyframes in{from{transform:translateY(6px)}to{transform:none}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<div class="wrap" id="app"></div>
+
+<script>
+(function(){
+"use strict";
+const app = document.getElementById("app");
+
+/* ---------- content ---------- */
+const BIZ = [
+  {id:"retail", name:"Retail shop", eg:"bottle shop, florist, boutique"},
+  {id:"hosp", name:"Café or restaurant", eg:"café, takeaway, pub"},
+  {id:"trades", name:"Trades", eg:"plumber, sparky, carpenter"},
+  {id:"office", name:"Office or services", eg:"bookkeeper, clinic, agency"}
+];
+
+const ROOMS = [
+  {id:"front", code:"A1", name:"Front counter", q:"How do customers mostly reach you?",
+   opts:[["Walk-ins and the phone, that's it",0],["Email plus one messaging app",2],["Five different apps and nobody can keep up",1]],
+   go:"Your messages are in one place. Try an AI assistant to draft replies to common questions, then edit before sending.",
+   fix:"Pick one main channel for customer messages first. AI can't help with replies scattered across five apps."},
+  {id:"office", code:"A2", name:"Back office", q:"Where do your invoices live?",
+   opts:[["A shoebox (or three)",0],["A spreadsheet I update sometimes",1],["Accounting software like Xero or MYOB",2]],
+   go:"Your software already has AI built in. Look for the reconciliation and insights features before buying anything new.",
+   fix:"Get invoices into accounting software first. A receipt-scanning app can turn the shoebox into data."},
+  {id:"stock", code:"A3", name:"Stockroom", q:"How do you know what to reorder?",
+   opts:[["Gut feel and a quick look at the shelf",0],["A list I keep",1],["My system tells me what's low",2]],
+   go:"Your sales data can do more. Ask AI to spot slow sellers or seasonal patterns from an export.",
+   fix:"Start tracking stock in your POS or a simple sheet. AI needs records before it can find patterns."},
+  {id:"staff", code:"B1", name:"Staff room", q:"Has anyone on your team tried ChatGPT or similar?",
+   opts:[["Nobody, as far as I know",0],["Probably, but secretly",1],["Yes, some of us use it often",2]],
+   go:"Your team is curious. Agree a few simple rules together, like what never goes into a chatbot.",
+   fix:"Spend 20 minutes as a team trying one free AI tool on a real task, like rewriting a sign or email."},
+  {id:"fin", code:"B2", name:"Finance & compliance desk", q:"How do you handle BAS and payroll?",
+   opts:[["Panic the week it's due",0],["My accountant sorts it from my paperwork",1],["Software keeps it up to date and my accountant checks",2]],
+   go:"You're set up for AI help with BAS prep and payroll checks. Keep your accountant checking the final numbers.",
+   fix:"Move payroll and bookkeeping into software before trying AI for compliance. Ask your accountant which one they work with."},
+  {id:"safe", code:"B3", name:"The safe", q:"Would you paste a customer's details into a free chatbot?",
+   opts:[["Sure, why not",0],["Not sure, never thought about it",1],["No, not without checking how it's stored",2]],
+   go:"Good instinct. Keep customer names, card details and staff records out of free tools.",
+   fix:"Make one rule today: no customer or staff personal details go into free AI tools."}
+];
+
+const ROUNDS = {
+  r1:{type:"roh", head:"Real or Hype?", claim:"Accounting software in Australia can now help prepare your BAS using AI.",
+      ans:"real", why:"Real. MYOB has rolled out an AI-supported BAS tool, first for sole traders. Have your accountant check before you lodge.",
+      take:"Check what's already inside your accounting software."},
+  r2:{type:"roh", head:"Real or Hype?", claim:"Using AI means you have to hire a tech person.",
+      ans:"hype", why:"Hype. Most small-business AI is built into apps you already use, or works by typing plain English.",
+      take:"If you can write a text message, you can use most AI tools."},
+  r3:{type:"roh", head:"Real or Hype?", claim:"An app can read a crumpled, handwritten receipt and file it in your books.",
+      ans:"real", why:"Real. Receipt apps like Dext read photos of receipts, including handwritten ones, and code them to the right expense account.",
+      take:"Snap receipts on the day, not at tax time."},
+  r4:{type:"roh", head:"Real or Hype?", claim:"AI chatbots always get Australian tax and award rules right.",
+      ans:"hype", why:"Hype. Chatbots can sound confident and still be wrong, especially on rules that change.",
+      take:"Use AI to draft and explain. Check rules with the ATO, Fair Work or your accountant."},
+  bot:{type:"bot", head:"Spot the Bot",
+      lead:"A customer complained their order was late. Which reply did AI write?",
+      a:"Sorry mate, the delivery van broke down Tuesday. Your box is on today's run, and I've popped a free bottle of olive oil in for the wait. Dave",
+      b:"We sincerely apologise for any inconvenience caused. Your satisfaction is our top priority, and we are working diligently to resolve this matter promptly.",
+      ans:"b", why:"Reply B. AI drafts often sound polished but generic. Reply A has real details: the van, the date, a name.",
+      take:"Let AI draft, then add the details only you know."},
+  rogue:{type:"rogue", head:"Chatbot Gone Rogue",
+      lead:"You ask a chatbot about Sunday shifts. It replies:",
+      say:"Good news! Casual staff in Victoria get the same hourly rate on Sundays as weekdays. No need to change your payroll.",
+      opts:[["Trust it and save the hassle","bad"],["Check the award on the Fair Work website","good"],["Ask the chatbot again until it agrees","bad"]],
+      why:"Check it. Weekend pay depends on your award and is often higher. A confident answer isn't a correct one.",
+      take:"Catch the mistake: anything about pay, tax or law gets checked."}
+};
+
+const STEPS = ["biz","room:front","room:office","r1","room:stock","bot","room:staff","r2","room:fin","r3","r4","room:safe","rogue","result"];
+const TOTAL_PLAY = STEPS.length - 2;
+
+/* Starter shortlist: checked October 2026. Update monthly. */
+const TOOLS = [
+  {id:"xero", name:"Xero (JAX assistant)", job:"Bookkeeping, bank reconciliation, spotting duplicate or missing entries",
+   tags:["bookkeeping","reconcile","reconciliation","accounts","xero","duplicate","cash flow","cashflow","books","accounting","finance"],
+   why:"If you're already on Xero, its built-in assistant can flag unreconciled items, duplicates and missing documents.", compliance:false, beta:false},
+  {id:"myob", name:"MYOB (AI BAS, Smart Invoice Reminders)", job:"BAS preparation and chasing late invoices",
+   tags:["bas","gst","tax","myob","invoice","late","reminder","chase","overdue","payment","compliance"],
+   why:"MYOB has AI help for preparing BAS and automatic reminders for late invoices. Some features are still in beta.", compliance:true, beta:true},
+  {id:"dext", name:"Dext", job:"Capturing receipts and supplier invoices",
+   tags:["receipt","receipts","invoice","supplier","expense","expenses","paperwork","scan","shoebox","bills"],
+   why:"Take a photo of a receipt or forward an email and it pulls out the details and sends them to your accounting software.", compliance:false, beta:false},
+  {id:"eh", name:"Employment Hero", job:"Payroll, award rates, super and staff compliance",
+   tags:["payroll","pay","award","wages","super","superannuation","staff","employee","hr","fair work","compliance","onboarding"],
+   why:"Payroll software with automated compliance checks for awards and super, built for Australian businesses.", compliance:true, beta:false},
+  {id:"deputy", name:"Deputy", job:"Rostering, timesheets and shift planning",
+   tags:["roster","rostering","shift","shifts","timesheet","schedule","scheduling","staff hours"],
+   why:"Builds rosters and tracks timesheets, and can connect to your payroll so hours flow through.", compliance:false, beta:false},
+  {id:"assistant", name:"ChatGPT, Claude or Microsoft Copilot", job:"Drafting emails, replies, policies, signs and product descriptions",
+   tags:["email","emails","reply","replies","write","writing","draft","policy","menu","description","customer","complaint","review","letter","message"],
+   why:"General AI assistants are good at first drafts. Paste in your notes, ask for a draft, then edit it in your own voice.", compliance:false, beta:false},
+  {id:"canva", name:"Canva", job:"Social media posts, flyers and signage",
+   tags:["social","instagram","facebook","post","posts","flyer","poster","sign","signage","marketing","design","graphics","tiktok"],
+   why:"Design templates with AI tools to write captions and generate or edit images for posts and flyers.", compliance:false, beta:false}
+];
+
+/* ---------- state ---------- */
+const S = {i:0, biz:null, rooms:{}, coins:0, correct:0, quizCount:0};
+function step(){return STEPS[S.i];}
+function next(){S.i++; render(); window.scrollTo({top:0,behavior:"smooth"});}
+function el(tag, attrs, ...kids){
+  const e=document.createElement(tag);
+  if(attrs) for(const k in attrs){ if(k==="class") e.className=attrs[k]; else if(k==="text") e.textContent=attrs[k]; else if(k.startsWith("on")) e.addEventListener(k.slice(2),attrs[k]); else e.setAttribute(k,attrs[k]); }
+  for(const c of kids){ if(c==null) continue; e.append(c.nodeType?c:document.createTextNode(c)); }
+  return e;
+}
+function status(id){const v=S.rooms[id]; return v==null?"":v===2?"go":v===1?"mid":"stop";}
+function bizName(){const b=BIZ.find(x=>x.id===S.biz); return b?b.name:"Small business";}
+
+function header(){
+  const played = Math.max(0, S.i-1);
+  return el("div",{class:"wrap",style:"gap:10px"},
+    el("div",{class:"top"},
+      el("span",{class:"label",text:"AI Shop Makeover"}),
+      el("span",{class:"coins",text:"★ "+S.coins+" pts"})),
+    el("div",{class:"progress","aria-hidden":"true"}, el("span",{style:"width:"+Math.min(100,played/TOTAL_PLAY*100)+"%"})));
+}
+function plan(current){
+  const g=el("div",{class:"plan",role:"img","aria-label":"Floor plan of your shop showing each room's AI readiness"});
+  for(const r of ROOMS){
+    g.append(el("div",{class:"room "+status(r.id)+(r.id===current?" now":"")},
+      el("span",{class:"code",text:r.code+(S.rooms[r.id]!=null?(" · "+["NEEDS BASICS","TIDY UP","READY"][S.rooms[r.id]]):"")}),
+      el("span",{class:"nm",text:r.name})));
+  }
+  return g;
+}
+function legend(){
+  return el("div",{class:"legend"},
+    el("span",{},el("i",{style:"background:var(--go)"}),"Ready for AI"),
+    el("span",{},el("i",{style:"background:var(--mid)"}),"Tidy up first"),
+    el("span",{},el("i",{style:"background:var(--stop)"}),"Basics first"));
+}
+
+/* ---------- screens ---------- */
+function render(){
+  app.replaceChildren();
+  const s=step();
+  if(s==="biz") return renderStart();
+  if(s==="result") return renderResult();
+  app.append(header());
+  if(s.startsWith("room:")) return renderRoom(ROOMS.find(r=>r.id===s.slice(5)));
+  const R=ROUNDS[s];
+  if(R.type==="roh") return renderRoh(R);
+  if(R.type==="bot") return renderBot(R);
+  if(R.type==="rogue") return renderRogue(R);
+}
+
+function renderStart(){
+  const sel = el("div",{class:"opts"});
+  BIZ.forEach((b,ix)=>sel.append(el("button",{class:"opt",type:"button",onclick:()=>{S.biz=b.id; next();}},
+    el("span",{class:"k",text:String.fromCharCode(65+ix)}),
+    el("span",{}, el("b",{text:b.name}), el("br"), el("span",{class:"small",text:b.eg})))));
+  app.append(
+    el("span",{class:"tag",text:"5 MINUTE GAME"}),
+    el("h1",{text:"AI Shop Makeover"}),
+    el("p",{class:"lead",text:"Tour your own business room by room. Pick the answer that looks most like your place, and dodge a few AI traps on the way. At the end you get a readiness map and your first three moves."}),
+    plan(null),
+    el("div",{class:"card fade"},
+      el("span",{class:"label",text:"First up"}),
+      el("h2",{text:"What kind of business do you run?"}),
+      sel),
+    el("p",{class:"small",text:"No sign-up. Nothing you pick here is shared."}));
+}
+
+function renderRoom(r){
+  const card=el("div",{class:"card fade"});
+  const opts=el("div",{class:"opts"});
+  r.opts.forEach(([t,v],ix)=>opts.append(el("button",{class:"opt",type:"button",onclick:()=>{
+    S.rooms[r.id]=v; S.coins+=10; next();}},
+    el("span",{class:"k",text:String.fromCharCode(65+ix)}), el("span",{text:t}))));
+  card.append(el("span",{class:"label",text:"Room "+r.code+" · "+r.name}), el("h2",{text:r.q}), el("p",{class:"small",text:"Be honest. The truthful answer gets you the useful result, and there are points either way."}), opts);
+  app.append(plan(r.id), card);
+}
+
+function answerBlock(card, ok, why, take){
+  if(ok){S.coins+=25; S.correct++;}
+  S.quizCount++;
+  card.append(el("div",{class:"reveal fade"},
+    el("b",{text:ok?"Nice one. +25 pts":"Not quite."}),
+    el("p",{text:why}),
+    el("p",{class:"takeaway",text:"→ "+take})),
+    el("button",{class:"btn",type:"button",onclick:next,text:"Keep going"}));
+  document.querySelector(".coins").textContent="★ "+S.coins+" pts";
+}
+
+function renderRoh(R){
+  const card=el("div",{class:"card fade"});
+  const row=el("div",{class:"opts"});
+  const mk=(lbl,val)=>el("button",{class:"opt",type:"button",onclick:(e)=>{
+    row.querySelectorAll("button").forEach(b=>b.disabled=true);
+    const ok=val===R.ans; e.currentTarget.classList.add(ok?"right":"wrong");
+    if(!ok) row.querySelector('[data-v="'+R.ans+'"]').classList.add("right");
+    answerBlock(card, ok, R.why, R.take);},"data-v":val}, el("span",{class:"k",text:val==="real"?"✓":"✗"}), el("b",{text:lbl}));
+  row.append(mk("Real","real"), mk("Hype","hype"));
+  card.append(el("span",{class:"tag",text:"BONUS ROUND"}), el("h2",{text:R.head}), el("p",{style:"font-size:1.15rem;font-weight:600",text:"“"+R.claim+"”"}), row);
+  app.append(card);
+}
+
+function renderBot(R){
+  const card=el("div",{class:"card fade"});
+  const row=el("div",{class:"opts"});
+  const mk=(k,txt)=>el("button",{class:"opt",type:"button","data-v":k,onclick:(e)=>{
+    row.querySelectorAll("button").forEach(b=>b.disabled=true);
+    const ok=k===R.ans; e.currentTarget.classList.add(ok?"right":"wrong");
+    if(!ok) row.querySelector('[data-v="'+R.ans+'"]').classList.add("right");
+    answerBlock(card, ok, R.why, R.take);}}, el("span",{class:"k",text:k.toUpperCase()}), el("span",{text:txt}));
+  row.append(mk("a",R.a), mk("b",R.b));
+  card.append(el("span",{class:"tag",text:"BONUS ROUND"}), el("h2",{text:R.head}), el("p",{class:"lead",text:R.lead}), row, el("p",{class:"small",text:"Example replies written for this game."}));
+  app.append(card);
+}
+
+function renderRogue(R){
+  const card=el("div",{class:"card fade"});
+  const row=el("div",{class:"opts"});
+  R.opts.forEach(([t,v],ix)=>row.append(el("button",{class:"opt",type:"button","data-v":v,onclick:(e)=>{
+    row.querySelectorAll("button").forEach(b=>b.disabled=true);
+    const ok=v==="good"; e.currentTarget.classList.add(ok?"right":"wrong");
+    if(!ok) row.querySelector('[data-v="good"]').classList.add("right");
+    answerBlock(card, ok, R.why, R.take);}}, el("span",{class:"k",text:String.fromCharCode(65+ix)}), el("span",{text:t}))));
+  card.append(el("span",{class:"tag",text:"BOSS ROUND"}), el("h2",{text:R.head}), el("p",{class:"lead",text:R.lead}),
+    el("div",{class:"bubble"}, el("span",{class:"who",text:"CHATBOT"}), R.say), el("p",{style:"font-weight:600",text:"What do you do?"}), row);
+  app.append(card);
+}
+
+function readiness(){
+  const sum=ROOMS.reduce((a,r)=>a+(S.rooms[r.id]||0),0);
+  if(sum>=9) return {sum, level:"Ready to roll", c:"var(--go)", blurb:"Most of your shop is set up for AI. Start with one quick win and build from there."};
+  if(sum>=5) return {sum, level:"Experimenting", c:"var(--mid)", blurb:"Some rooms are ready now. Tidy up the others and AI gets much more useful."};
+  return {sum, level:"Getting started", c:"var(--stop)", blurb:"Every business starts somewhere. A few basics now will make AI pay off later."};
+}
+function moves(){
+  const go=ROOMS.filter(r=>S.rooms[r.id]===2).map(r=>({r,t:r.go}));
+  const fix=ROOMS.filter(r=>S.rooms[r.id]!==2).sort((a,b)=>(S.rooms[a.id]||0)-(S.rooms[b.id]||0)).map(r=>({r,t:r.fix}));
+  const safe=ROOMS.find(r=>r.id==="safe");
+  let list=[];
+  if(S.rooms.safe!==2) list.push({r:safe,t:safe.fix});
+  for(const m of go.concat(fix)){ if(list.length>=3) break; if(!list.some(x=>x.r.id===m.r.id)) list.push(m); }
+  return list.slice(0,3);
+}
+
+function renderResult(){
+  const R=readiness();
+  const docket=String(1000+Math.floor(Math.random()*9000));
+  const d=new Date();
+  const rc=el("div",{class:"receipt fade"},
+    el("div",{class:"c big",text:"AI SHOP MAKEOVER"}),
+    el("div",{class:"c",text:bizName().toUpperCase()}),
+    el("div",{class:"c small",text:"Docket #"+docket+" · "+d.toLocaleDateString("en-AU")}),
+    el("hr"));
+  for(const r of ROOMS){
+    rc.append(el("div",{class:"ln"}, el("span",{text:r.code+" "+r.name}), el("span",{text:["BASICS","TIDY","READY"][S.rooms[r.id]||0]})));
+  }
+  rc.append(el("hr"),
+    el("div",{class:"ln"},el("span",{text:"Readiness"}),el("span",{text:R.sum+" / 12"})),
+    el("div",{class:"ln"},el("span",{text:"AI-savvy rounds"}),el("span",{text:S.correct+" / "+S.quizCount})),
+    el("div",{class:"ln big"},el("span",{text:"TOTAL POINTS"}),el("span",{text:String(S.coins)})),
+    el("hr"),
+    el("div",{class:"c"}, el("span",{class:"stamp",style:"color:"+R.c,text:R.level})),
+    el("div",{class:"c small",text:"A snapshot, not an audit. Thanks for playing!"}));
+
+  const ml=el("ol",{class:"moves"});
+  moves().forEach((m,ix)=>ml.append(el("li",{}, el("span",{class:"n",text:String(ix+1)}),
+    el("div",{}, el("span",{class:"label",text:m.r.code+" · "+m.r.name}), el("p",{text:m.t})))));
+
+  app.append(
+    el("span",{class:"tag",text:"YOUR RESULT"}),
+    el("h1",{text:R.level}),
+    el("p",{class:"lead",text:R.blurb}),
+    plan(null), legend(), rc,
+    el("div",{class:"card"}, el("span",{class:"label",text:"Your first three moves"}), ml),
+    renderAsk(),
+    el("div",{class:"row"}, el("button",{class:"btn ghost",type:"button",text:"Play again",onclick:()=>{Object.assign(S,{i:0,biz:null,rooms:{},coins:0,correct:0,quizCount:0}); render(); window.scrollTo({top:0});}})));
+}
+
+/* ---------- ask box ---------- */
+function localMatch(text){
+  const t=" "+text.toLowerCase()+" ";
+  return TOOLS.map(tool=>({tool,score:tool.tags.reduce((a,tag)=>a+(t.includes(tag)?(tag.length>4?2:1):0),0)}))
+    .filter(x=>x.score>0).sort((a,b)=>b.score-a.score).slice(0,3).map(x=>({tool:x.tool,why:x.tool.why}));
+}
+function toolCard(tool, why){
+  const head=el("div",{class:"head"}, el("span",{class:"name",text:tool.name}));
+  if(tool.beta) head.append(el("span",{class:"pill",text:"Some features in beta"}));
+  const c=el("div",{class:"tool fade"}, head, el("span",{class:"small",text:tool.job}), el("p",{text:why}));
+  if(tool.compliance) c.append(el("p",{class:"warn",text:"Tax, pay or legal work: have your accountant or bookkeeper check before you rely on it."}));
+  return c;
+}
+function renderAsk(){
+  const ta=el("textarea",{id:"need",placeholder:"e.g. I spend every Sunday chasing customers who haven't paid their invoices","aria-label":"What do you want AI help with?"});
+  const chips=el("div",{class:"chips"});
+  ["Chasing late invoices","Sorting receipts","Writing Instagram posts","Doing the roster","Getting award rates right"].forEach(c=>chips.append(el("button",{class:"chip",type:"button",text:c,onclick:()=>{ta.value=c; ta.focus();}})));
+  const out=el("div",{class:"opts","aria-live":"polite"});
+  const btn=el("button",{class:"btn",type:"button",text:"Find my tool"});
+  const note=el("p",{class:"small"});
+  btn.addEventListener("click", async ()=>{
+    const need=ta.value.trim().slice(0,600);
+    if(!need){ note.textContent="Type a job you want help with, or tap an example."; return; }
+    note.textContent="";
+    // Matches the request against the TOOLS shortlist using keywords (the "tags" on each tool).
+    const results=localMatch(need);
+    out.replaceChildren();
+    if(results.length){ results.forEach(m=>out.append(toolCard(m.tool,m.why))); }
+    else out.append(el("p",{text:"Nothing on our shortlist fits that yet. Try describing the job in different words, or tap an example above."}));
+  });
+  return el("div",{class:"card"},
+    el("span",{class:"tag",text:"ASK THE SHOP"}),
+    el("h2",{text:"What job do you want AI to help with?"}),
+    el("p",{class:"small",text:"Describe it in your own words. Please don't include customer names or private details."}),
+    ta, chips, btn, note, out,
+    el("p",{class:"small",text:"Suggestions come from a shortlist we check each month. We aren't paid by any of these companies."}));
+}
+render();
+})();
+</script>
+</body>
+</html>
